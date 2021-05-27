@@ -65,13 +65,73 @@ Matrix2D Matrix2D::transpose(){
     return Matrix2D(outData, outDims);
 }
 
-double Matrix2D::getDeterminant(){
-    
+// Determinant functions
+static Matrix2D shrinkMat(Matrix2D mat, int row, int col){
+    std::vector<int> dims = mat.getDims();
+    std::vector<float> data = mat.getData();
+    std::vector<int> outDims{dims[0]-1, dims[1]-1};
+    std::vector<float> outData(outDims[0]*outDims[1]);
+
+    int count = 0;
+    for(int i = 0; i < dims[1]; i++){
+        if(i == col) continue;
+        for(int j = 0; j < dims[0]; j++){
+            if(j == row) continue;
+            int index = j+i*dims[0];
+            outData[count] = data[index];
+            count++;
+        }
+    }
+    return Matrix2D(outData, outDims);
 }
 
-// Inverse related functionsw
-Matrix2D getInverse(){
+static float determinantRecurse(Matrix2D mat){
+    std::vector<int> dims = mat.getDims();
+    std::vector<float> data = mat.getData();
+    float sum = 0;
+    if(dims[0] != 2){
+        for(int i = 0; i < dims[1]; i++){
+            int sign = i % 2 == 0 ? 1 : -1;
+            sum += sign * data[i*dims[0]]*determinantRecurse(shrinkMat(mat, 0, i));
+        }
+    } else {
+        sum = data[0]*data[3]-data[1]*data[2];
+    }
+    return sum;
+}
 
+float Matrix2D::getDeterminant(){
+    if(dims[0]!=dims[1]) throw "Can't take determinant of non-square matrices";
+    return determinantRecurse(*this);
+}
+
+// Inverse related functions
+Matrix2D getCofactor(Matrix2D mat){
+    std::vector<int> dims = mat.getDims();
+    std::vector<float> data = mat.getData();
+    std::vector<int> outDims{dims[0], dims[1]};
+    std::vector<float> outData(outDims[0]*outDims[1]);
+    
+    for(int i = 0; i < dims[1]; i++){
+        int count;
+        count = i%2 == 0 ? 0 : 1;
+        for(int j = 0; j < dims[0]; j++){
+            float minor = shrinkMat(mat, j, i).getDeterminant();
+            int sign = count%2 == 0 ? 1 : -1;
+            int index = j+i*dims[0];
+            outData[index] = sign*minor;
+            count++;
+        }
+    }
+    return Matrix2D(outData, outDims);
+}
+
+Matrix2D Matrix2D::getInverse(){
+    float det = this->getDeterminant();
+    if(det == 0) throw "Can't get inverse of matrix with determinant of 0";
+    Matrix2D cofactor = getCofactor(*this);
+    Matrix2D adjoint = cofactor.transpose();
+    return adjoint.scalarMult(1.0/det);
 }
 
 Matrix2D Matrix2D::identityMat(int size){
