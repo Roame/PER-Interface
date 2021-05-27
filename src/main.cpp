@@ -5,12 +5,14 @@
 
 int main(int argc, char **argv) {
     // GraphicsMain(argc, argv);
-    // std::array<float, 4> data{1,1,1,1};
-    // std::array<int, 1> dims{1};
-    // const size_t test1 = 4, test2= 1;
-    // Matrix2D test = Matrix2D::fromArray<test1, test2>(data, dims);
 
-    Matrix2D test = Matrix2D::identityMat(12);
-    std::cout << test.toString() << std::endl;
+    Matrix2D test1 = Matrix2D(std::vector<float>{1, 1, 1}, std::vector<int>{1,3});
+    Matrix2D test2 = Matrix2D(std::vector<float>{2,3,2,  1,1,1, 1,2,3}, std::vector<int>{3,3});
+
+    Matrix2D output = (test1*test2).scalarMult(3.5);
+
+    std::cout << output.toString() << std::endl;
+
+    std::cout << output.transpose().toString() << std::endl;
 
 }
