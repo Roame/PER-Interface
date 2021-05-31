@@ -13,7 +13,7 @@ static std::string readFile(const char *location){
     std::string line;
     if(file.is_open()){
         while(getline(file, line)){
-            sstm << line;
+            sstm << line << "\n";
         }
         file.close();
     } else {

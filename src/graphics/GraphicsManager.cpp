@@ -11,27 +11,27 @@
 
 GLuint VAO, VBO, IBO, texture;
 
-const char* vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "layout (location = 2) in vec2 aTexCoord;\n"
-    "out vec3 ourColor;\n"
-    "out vec2 texCoord;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   ourColor = aColor;\n"
-    "   texCoord = aTexCoord;\n"
-    "}\0";
+// const char* vertexShaderSource = "#version 330 core\n"
+//     "layout (location = 0) in vec3 aPos;\n"
+//     "layout (location = 1) in vec3 aColor;\n"
+//     "layout (location = 2) in vec2 aTexCoord;\n"
+//     "out vec3 ourColor;\n"
+//     "out vec2 texCoord;\n"
+//     "void main()\n"
+//     "{\n"
+//     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+//     "   ourColor = aColor;\n"
+//     "   texCoord = aTexCoord;\n"
+//     "}\0";
 
-const char* fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
-    "in vec2 texCoord;\n"
-    "uniform sampler2D ourTexture;\n"
-    "void main() {\n"
-    "   FragColor= texture(ourTexture, texCoord);"
-    "}\0";
+// const char* fragmentShaderSource = "#version 330 core\n"
+//     "out vec4 FragColor;\n"
+//     "in vec3 ourColor;\n"
+//     "in vec2 texCoord;\n"
+//     "uniform sampler2D ourTexture;\n"
+//     "void main() {\n"
+//     "   FragColor= texture(ourTexture, texCoord);"
+//     "}\0";
     
 
 void genTexture(){
@@ -55,21 +55,8 @@ void loadTextureData(){
         }
     }
 
-    std::cout << (int) data[4*(1919+1079*1920)] << std::endl;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1920, 1080, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
-
-    // int width, height, nrChannels;
-    // unsigned char *data = stbi_load("shaders/container.jpg", &width, &height, &nrChannels, 0);
-    // if(data){
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, height, width, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    //     glGenerateMipmap(GL_TEXTURE_2D);
-    //     std::cout << "Height: " << height << " Width: " << width << " Channels: " << nrChannels << std::endl;
-    //     std::cout << (int) data[0] << " " << (int) data[1] << " " << (int) data[2] << std::endl;
-    // } else {
-    //     std::cout << "Failed to load texture" << std::endl;
-    // }
-    // stbi_image_free(data);
 }
 
 static void renderSceneCB(){
@@ -128,9 +115,27 @@ static void generateBuffers(){
 }
 
 static void compileShaders(){
+    // Getting source
+    std::string vertexShaderSource;
+    std::string fragmentShaderSource;
+    try {
+        vertexShaderSource = readFile("shaders/vShader.txt");
+    } catch(const char* err){
+        std::cout << "Error loading vertex shader: " << err << std::endl;
+        exit(1);
+    }
+    try {
+        fragmentShaderSource = readFile("shaders/fShader.txt");
+    } catch(const char* err){
+        std::cout << "Error loading fragment shader: " << err << std::endl;
+        exit(1);
+    }
+    const GLchar* vShaderPtr = vertexShaderSource.c_str();
+    const GLchar* fShaderPtr = fragmentShaderSource.c_str();
+
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glShaderSource(vertexShader, 1, &vShaderPtr, NULL);
     glCompileShader(vertexShader);
 
     int success;
@@ -143,7 +148,7 @@ static void compileShaders(){
 
     unsigned int fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glShaderSource(fragmentShader, 1, &fShaderPtr, NULL);
     glCompileShader(fragmentShader);
 
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
