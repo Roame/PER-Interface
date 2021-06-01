@@ -5,35 +5,20 @@
 #include <GL/freeglut.h>
 #include <string>
 
-#include "FileReader.h"
+#include "../utility/FileReader.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 GLuint VAO, VBO, IBO, texture;    
 
 void genTexture(){
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-}
-
-void loadTextureData(){
-    unsigned char data[1920*1080*4];
-    for(int i = 0; i < 1920; i++){
-        for(int j = 0; j < 1080; j++){
-            int index = 4*(j+i*1080);
-            data[index] = (int) (i/1920.0*255.0);
-            data[index+1] = 0;
-            data[index+2] = 0;
-            data[index+3] = 255;
-        }
-    }
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1920, 1080, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 static void renderSceneCB(){
@@ -51,9 +36,9 @@ static void initializeGlutCallBacks(){
 
 static void generateBuffers(){
     float vertices[] = {-1, -1, 0,  0.0, 0.0,
-                        -1,  1, 0,  1.0, 0.0,
+                        -1,  1, 0,  0.0, 1.0,
                          1,  1, 0,  1.0, 1.0,
-                         1, -1, 0,  0.0, 1.0};
+                         1, -1, 0,  1.0, 0.0};
     int indices[] = { 0, 1, 2,
                       2, 3, 0};
     
@@ -157,13 +142,25 @@ GraphicsManager::GraphicsManager(int argc, char **argv){
 
     compileShaders();
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     genTexture();
-    loadTextureData();
+    loadTexture(Texture());
     generateBuffers();
 
-    glutMainLoop();
+    // glutMainLoop(); // Avoiding inf. loop
 }
 
 GraphicsManager::~GraphicsManager(){}
+
+void GraphicsManager::update(){
+    glutMainLoopEvent();
+}
+
+void GraphicsManager::loadTexture(Texture texture) {
+    // Note: data should be organized left-to-right, then bottom-to-top
+    this->tex = texture;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width, tex.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex.data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+}
